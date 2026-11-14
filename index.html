@@ -433,7 +433,7 @@ const RAW = [
   [269, 'Bleach', 8.0, 366, 'T', 2004, 'f', 'AVN', 'Ichigo recibe poderes de Segador de Almas y debe defender a los vivos de espíritus hostiles.'],
   [16498, 'Attack on Titan', 8.6, 25, 'T', 2013, 'f', 'ADFM', 'La humanidad vive tras enormes muros para escapar de los titanes, hasta que una brecha lo cambia todo.'],
   [11061, 'Hunter x Hunter (2011)', 9.0, 148, 'T', 2011, 'f', 'AVF', 'Gon se hace cazador para encontrar a su padre y se topa con exámenes y rivales cada vez más duros.'],
-  [195604, 'Black Clover Season 2', 8.3, 12, 'T', 2026, 'r', 'ACF', 'Asta y los Caballeros Mágicos asaltan el Reino de la Pica para rescatar a sus capitanes.'],
+  [195604, 'Black Clover Season 2', 8.3, 6, 'T', 2026, 'r', 'ACF', 'Asta y los Caballeros Mágicos asaltan el Reino de la Pica para rescatar a sus capitanes.'],
   [185874, 'Bleach: Thousand-Year Blood War - The Calamity', 8.8, 13, 'T', 2026, 'r', 'AVN', 'La guerra contra los Quincy llega a su punto más oscuro.'],
   [195516, 'The Apothecary Diaries Season 3', 8.5, 24, 'T', 2026, 'r', 'DM', 'Maomao sigue resolviendo enigmas entre las intrigas del palacio imperial.'],
   [210482, "STEEL BALL RUN JoJo's Bizarre Adventure 2nd - 3rd STAGE", 8.6, 12, 'O', 2026, 'r', 'AVN', 'La carrera a caballo a través de América continúa con rivalidades y trampas mortales.'],
@@ -504,7 +504,8 @@ const cache = new Map();
 function gql(query, vars) {
   if (OFFLINE) return Promise.reject(new Error('offline'));
   const key = query + JSON.stringify(vars || {});
-  if (cache.has(key)) return cache.get(key);
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.t < 300000) return hit.p;
   const p = (async () => {
     const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 9000);
     try {
@@ -515,13 +516,13 @@ function gql(query, vars) {
       return j.data;
     } finally { clearTimeout(to); }
   })();
-  cache.set(key, p);
+  cache.set(key, { p, t: Date.now() });
   p.catch(() => cache.delete(key));
   return p;
 }
 function norm(m) {
   const t = m.title || {};
-  return { id: m.id, type: m.type, title: t.english || t.romaji || 'Sin título', romaji: t.romaji, cover: m.coverImage && (m.coverImage.extraLarge || m.coverImage.large), color: m.coverImage && m.coverImage.color, banner: m.bannerImage, format: m.format, status: m.status, eps: m.episodes, dur: m.duration, season: m.season, year: m.seasonYear, genres: m.genres || [], score: m.averageScore ? m.averageScore / 10 : null, desc: (m.description || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(), country: m.countryOfOrigin, studio: m.studios && m.studios.nodes && m.studios.nodes[0] && m.studios.nodes[0].name, next: m.nextAiringEpisode, adult: m.isAdult };
+  return { id: m.id, type: m.type, title: t.english || t.romaji || 'Sin título', romaji: t.romaji, cover: m.coverImage && (m.coverImage.extraLarge || m.coverImage.large), color: m.coverImage && m.coverImage.color, banner: m.bannerImage, format: m.format, status: m.status, eps: m.episodes, aired: m.nextAiringEpisode ? Math.max(0, m.nextAiringEpisode.episode - 1) : m.episodes, dur: m.duration, season: m.season, year: m.seasonYear, genres: m.genres || [], score: m.averageScore ? m.averageScore / 10 : null, desc: (m.description || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(), country: m.countryOfOrigin, studio: m.studios && m.studios.nodes && m.studios.nodes[0] && m.studios.nodes[0].name, next: m.nextAiringEpisode, adult: m.isAdult };
 }
 const MEDIA = 'id type title{romaji english} coverImage{extraLarge large color} bannerImage format status episodes duration season seasonYear genres averageScore description(asHtml:false) countryOfOrigin isAdult nextAiringEpisode{episode airingAt} studios(isMain:true){nodes{name}}';
 const pageQ = (args, per, page) => `{Page(page:${page},perPage:${per}){pageInfo{hasNextPage}media(type:ANIME,isAdult:false,${args}){${MEDIA}}}}`;
@@ -617,7 +618,7 @@ let PROF = store.get('prof', null);
 let NOTIFS = store.get('notifs', null);
 const saveLib = () => store.set('lib', LIB);
 const saveSet = () => { store.set('set', SET); document.documentElement.classList.toggle('reduce', !!SET.reduce); };
-const slim = m => ({ id: m.id, title: m.title, cover: m.cover, color: m.color, banner: m.banner, eps: m.eps, score: m.score, format: m.format, genres: (m.genres || []).slice(0, 3), year: m.year, status: m.status, dur: m.dur, desc: (m.desc || '').slice(0, 300) });
+const slim = m => ({ id: m.id, title: m.title, cover: m.cover, color: m.color, banner: m.banner, eps: m.eps, aired: m.aired, score: m.score, format: m.format, genres: (m.genres || []).slice(0, 3), year: m.year, status: m.status, dur: m.dur, desc: (m.desc || '').slice(0, 300) });
 const COLORS = ['#37ff8b', '#b99cff', '#ff7ad9', '#ffd166', '#5ee7ff', '#ff8a5c'];
 const me = () => PROF || { name: 'Invitado', color: COLORS[0], guest: true };
 function ensure(m) { if (!LIB[m.id]) LIB[m.id] = { s: null, at: Date.now(), m: slim(m) }; else LIB[m.id].m = slim(m); return LIB[m.id]; }
@@ -672,7 +673,7 @@ const resumeEp = id => (LIB[id] && LIB[id].ep) || 1;
 const addBtn = id => inList(id) ? `<button class="add on" data-add="${id}" aria-label="Quitar de mi lista">${ic('check')}</button>` : `<button class="add" data-add="${id}" aria-label="Añadir a mi lista">${ic('plus')}</button>`;
 
 function cardH(m) {
-  const n = m.format === 'MOVIE' ? '' : (m.eps ? `<span class="eps">${m.eps} ep.</span>` : '');
+  const c = m.aired ?? m.eps, n = m.format === 'MOVIE' ? '' : (c ? `<span class="eps">${c} ep.</span>` : '');
   return `<div class="card"><a class="poster" href="#/title/${m.id}" tabindex="-1" aria-hidden="true">${art(m)}${n}</a>${addBtn(m.id)}<a class="meta" href="#/title/${m.id}"><h3>${esc(m.title)}</h3><div class="sub"><span>${esc(gname(m.genres[0] || ''))}</span>${m.score ? `<span class="star">★ ${m.score.toFixed(1)}</span>` : ''}</div></a></div>`;
 }
 const rankH = (m, i) => `<div class="rank"><span class="num" aria-hidden="true">${i + 1}</span>${cardH(m)}</div>`;
@@ -690,7 +691,7 @@ const chip = (t, cls) => `<span class="chip ${cls || ''}">${t}</span>`;
 const metaChips = m => [
   m.score ? chip(ic('star') + m.score.toFixed(1), 'score') : '',
   m.year ? chip(m.year) : '',
-  m.format === 'MOVIE' ? chip('Película') : (m.eps ? chip(m.eps + ' ' + plural(m.eps, 'episodio', 'episodios')) : ''),
+  m.format === 'MOVIE' ? chip('Película') : ((m.aired ?? m.eps) ? chip((m.aired ?? m.eps) + ' ' + plural(m.aired ?? m.eps, 'episodio', 'episodios')) : ''),
   m.format && m.format !== 'MOVIE' ? chip(FMT[m.format] || m.format) : '',
   m.genres[0] ? chip(esc(gname(m.genres[0]))) : ''
 ].join('');
@@ -965,7 +966,7 @@ async function vMovies(c) {
   gridMount($('#gh'), p => browse({ format: 'MOVIE', range: 'all' }, p));
 }
 /* ============ Vistas: serie, reproductor y espacio personal ============ */
-const epCount = m => m.format === 'MOVIE' ? 1 : (m.eps || (m.next ? m.next.episode - 1 : 0));
+const epCount = m => m.format === 'MOVIE' ? 1 : (m.aired ?? m.eps ?? 0);
 const skTitle = '<div class="tbanner"><div class="tb-in"><div class="tposter sk"></div><div><div class="sk" style="height:40px;width:60%;margin-bottom:14px"></div><div class="sk" style="height:90px"></div></div></div></div>';
 
 /* Lista de episodios (la usan la ficha y el reproductor) */
@@ -1016,7 +1017,7 @@ async function vTitle(c) {
     <div class="chips">${metaChips(m)}</div><h1>${esc(m.title)}</h1><div class="pills" style="margin-bottom:14px">${m.genres.map(g => `<a class="pill" href="#/browse?genre=${encodeURIComponent(g)}">${esc(gname(g))}</a>`).join('')}</div>
     <p class="syn${long ? ' clamp' : ''}" id="syn">${esc(m.desc || 'Sin sinopsis disponible.')}</p>${long ? '<button class="linkbtn" id="more">Ver más</button>' : ''}
     <div class="tact"><a class="btn volt" href="${watchHref(id, resumeEp(id))}">${ic('play')}${L().ep ? 'Continuar con el episodio ' + L().ep : 'Ver ahora'}</a><button class="btn" id="bList"></button><button class="btn round" id="bBellT" aria-label="Avisarme de nuevos episodios">${ic('bell')}</button><button class="btn round" id="bFav" aria-label="Favorita">${ic('heart')}</button><button class="btn round" id="bShare" aria-label="Compartir">${ic('share')}</button></div>
-    <div class="stats">${stat('Formato', esc(FMT[m.format] || m.format || ''))}${stat('Episodios', n ? n + (m.next ? ` (el ${m.next.episode} sale ${inT(m.next.airingAt)})` : '') : '')}${stat('Duración', m.dur ? m.dur + ' min' : '')}${stat('Puntuación', m.score ? '★ ' + m.score.toFixed(2) : '')}${stat('Estudio', esc(m.studio || ''))}${stat('Temporada', esc(seasonTxt))}${stat('Estado', STAT[m.status] || '')}${stat('Origen', m.country || '')}</div></div></div></section>
+    <div class="stats">${stat('Formato', esc(FMT[m.format] || m.format || ''))}${stat('Episodios', n ? (m.eps && m.eps > n ? `${n} de ${m.eps}` : n) + (m.next ? ` (el ${m.next.episode} sale ${inT(m.next.airingAt)})` : '') : '')}${stat('Duración', m.dur ? m.dur + ' min' : '')}${stat('Puntuación', m.score ? '★ ' + m.score.toFixed(2) : '')}${stat('Estudio', esc(m.studio || ''))}${stat('Temporada', esc(seasonTxt))}${stat('Estado', STAT[m.status] || '')}${stat('Origen', m.country || '')}</div></div></div></section>
     <section class="sec"><div class="tabs" role="tablist">${[['eps', 'Episodios'], ['order', 'Orden para verla'], ['rel', 'Relacionados'], ['sim', 'Similares'], ['chars', 'Personajes'], ['cmt', 'Comentarios']].map((t, i) => `<button class="tab${i ? '' : ' on'}" role="tab" data-t="${t[0]}">${t[1]}</button>`).join('')}</div><div class="tabpanel" id="tp"></div></section>`);
   const refresh = () => {
     const l = LIB[id], b = $('#bList'); b.innerHTML = l && l.s ? ic('check') + STATUS[l.s] : ic('plus') + 'Mi lista'; b.classList.toggle('on', !!(l && l.s));
