@@ -350,6 +350,9 @@ body.hn .wrap{--pad:28px;--top:150px}
 #toast{position:fixed;left:50%;bottom:104px;transform:translate(-50%,20px);background:var(--tx);color:var(--bg);padding:11px 20px;border-radius:999px;font-weight:700;z-index:150;opacity:0;pointer-events:none;transition:.25s;max-width:calc(100vw - 32px);text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 
+.doramas-frame-wrap{position:relative;width:100%;height:min(82vh,1050px);min-height:620px;overflow:auto;border-radius:14px;background:#fff}
+.doramas-frame{display:block;width:100%;height:100%;min-height:620px;border:0;background:#fff}
+@media(max-width:560px){.doramas-frame-wrap{height:78vh;min-height:560px}.doramas-frame{min-height:560px}}
 /* footer + tabbar */
 footer{margin-top:70px;border-top:1px solid var(--line);padding:38px clamp(16px,4vw,48px) 20px;background:rgba(20,10,38,.55)}
 .fgrid{display:grid;grid-template-columns:1.6fr repeat(4,1fr);gap:28px}
@@ -759,7 +762,7 @@ function bindRows(root) {
 }
 
 /* ============ Cabecera, menú, buscador y avisos ============ */
-const NAV = [['/', 'Inicio', 'home'], ['/browse', 'Explorar', 'compass'], ['/latest', 'Novedades', 'bolt'], ['/schedule', 'Calendario', 'cal'], ['/movies', 'Películas', 'film'], ['/genres', 'Géneros', 'tag']];
+const NAV = [['/', 'Inicio', 'home'], ['/browse', 'Explorar', 'compass'], ['/latest', 'Novedades', 'bolt'], ['/schedule', 'Calendario', 'cal'], ['/movies', 'Películas', 'film'], ['/doramas', 'Doramas', 'film'], ['/genres', 'Géneros', 'tag']];
 const LOGO = `<svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c4dff"/><stop offset="1" stop-color="#37ff8b"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg)"/><path d="M12.500 9.500v13l10.500-6.500Z" fill="#0b0516"/></svg>`;
 function drawHeader() {
   const p = me();
@@ -780,14 +783,14 @@ function setActive(path) {
 }
 function drawFooter() {
   const col = (h, l) => `<div><h4>${h}</h4><ul>${l.map(x => `<li><a href="#${x[0]}">${x[1]}</a></li>`).join('')}</ul></div>`;
-  $('#foot').innerHTML = `<div class="fgrid"><div><a class="logo" href="#/">${LOGO}<span>ANI<b>KURA</b></span></a><p class="blurb">Anime y estrenos en español. Catálogo y carátulas de AniList. AniKura no aloja vídeos.</p></div>${col('Descubrir', [['/', 'Inicio'], ['/browse', 'Explorar'], ['/latest', 'Últimos episodios'], ['/schedule', 'Calendario'], ['/genres', 'Géneros'], ['/movies', 'Películas']])}${col('Tu espacio', [['/library', 'Biblioteca'], ['/profile', 'Perfil'], ['/settings', 'Ajustes']])}${col('Social', [['/community', 'Comunidad'], ['/together', 'Ver en grupo'], ['/community?c=voz', 'Salas de voz']])}${col('AniKura', [['/about', 'Acerca de'], ['/help', 'Ayuda'], ['/contact', 'Contacto'], ['/terms', 'Condiciones'], ['/privacy', 'Privacidad'], ['/dmca', 'DMCA']])}</div><div class="fbot"><span>© ${new Date().getFullYear()} AniKura</span><span>Pulsa / para buscar</span></div>`;
+  $('#foot').innerHTML = `<div class="fgrid"><div><a class="logo" href="#/">${LOGO}<span>ANI<b>KURA</b></span></a><p class="blurb">Anime y estrenos en español. Catálogo y carátulas de AniList. AniKura no aloja vídeos.</p></div>${col('Descubrir', [['/', 'Inicio'], ['/browse', 'Explorar'], ['/latest', 'Últimos episodios'], ['/schedule', 'Calendario'], ['/genres', 'Géneros'], ['/movies', 'Películas'], ['/doramas', 'Doramas']])}${col('Tu espacio', [['/library', 'Biblioteca'], ['/profile', 'Perfil'], ['/settings', 'Ajustes']])}${col('Social', [['/community', 'Comunidad'], ['/together', 'Ver en grupo'], ['/community?c=voz', 'Salas de voz']])}${col('AniKura', [['/about', 'Acerca de'], ['/help', 'Ayuda'], ['/contact', 'Contacto'], ['/terms', 'Condiciones'], ['/privacy', 'Privacidad'], ['/dmca', 'DMCA']])}</div><div class="fbot"><span>© ${new Date().getFullYear()} AniKura</span><span>Pulsa / para buscar</span></div>`;
 }
 function openMenu() {
   const cur = '/' + (curPath.split('/')[1] || '');
   const grp = (h, l) => `<h3>${h}</h3>${l.map(x => `<a href="#${x[0]}" class="${('/' + x[0].split('/')[1]) === cur ? 'on' : ''}">${ic(x[2])}${x[1]}</a>`).join('')}`;
   const d = document.createElement('div');
   d.className = 'drawer';
-  d.innerHTML = `<div class="scrim"></div><aside role="dialog" aria-label="Menú"><div style="display:flex;justify-content:space-between;align-items:center"><span class="logo">${LOGO}<span>ANI<b>KURA</b></span></span><button class="ibtn" data-x aria-label="Cerrar menú">${ic('close')}</button></div>${grp('Descubrir', [['/', 'Inicio', 'home'], ['/browse', 'Explorar', 'compass'], ['/latest', 'Últimos episodios', 'bolt'], ['/schedule', 'Calendario', 'cal'], ['/movies', 'Películas', 'film'], ['/genres', 'Géneros', 'tag']])}${grp('Tu espacio', [['/library', 'Biblioteca', 'books'], ['/profile', 'Perfil', 'user'], ['/settings', 'Ajustes', 'gear']])}${grp('Social', [['/community', 'Comunidad', 'users'], ['/together', 'Ver en grupo', 'play'], ['/community?c=voz', 'Salas de voz', 'mic']])}</aside>`;
+  d.innerHTML = `<div class="scrim"></div><aside role="dialog" aria-label="Menú"><div style="display:flex;justify-content:space-between;align-items:center"><span class="logo">${LOGO}<span>ANI<b>KURA</b></span></span><button class="ibtn" data-x aria-label="Cerrar menú">${ic('close')}</button></div>${grp('Descubrir', [['/', 'Inicio', 'home'], ['/browse', 'Explorar', 'compass'], ['/latest', 'Últimos episodios', 'bolt'], ['/schedule', 'Calendario', 'cal'], ['/movies', 'Películas', 'film'], ['/doramas', 'Doramas', 'film'], ['/genres', 'Géneros', 'tag']])}${grp('Tu espacio', [['/library', 'Biblioteca', 'books'], ['/profile', 'Perfil', 'user'], ['/settings', 'Ajustes', 'gear']])}${grp('Social', [['/community', 'Comunidad', 'users'], ['/together', 'Ver en grupo', 'play'], ['/community?c=voz', 'Salas de voz', 'mic']])}</aside>`;
   const close = () => { d.remove(); document.removeEventListener('keydown', kd); };
   const kd = e => { if (e.key === 'Escape') close(); };
   d.addEventListener('click', e => { if (e.target.closest('.scrim,[data-x],a')) close(); });
@@ -950,6 +953,29 @@ async function vSchedule(c) {
 async function vGenres(c) {
   c.set(`<div class="page"><h1>Elige un género</h1><p class="lead">Elige una tarjeta para explorar sus series y películas.</p><div class="genres">${GENRES.map((g, i) => `<a class="gtile" href="#/browse?genre=${encodeURIComponent(g)}" style="background:linear-gradient(135deg,hsl(${258 + (i * 9) % 50} 72% 34%),hsl(${i % 3 === 0 ? 150 : 268} 62% 17%))"><b>${gname(g)}</b><small>Explorar ${gname(g).toLowerCase()}</small></a>`).join('')}</div>
     <h2 class="stitle" style="margin-top:38px">Colecciones</h2><div class="pills" style="margin-top:10px">${['hidden', 'marathon', 'classics', 'short', 'moviesTop'].map(k => `<a class="pill" href="#/browse?list=${k}">${esc(listTitle(k))}</a>`).join('')}</div></div>`);
+}
+
+/* ---------- Doramas (catálogo y búsqueda del proveedor) ---------- */
+async function vDoramas(c) {
+  c.set(`<div class="page" style="padding-bottom:0">
+    <div class="live"><i></i> CATEGORÍA ESPECIAL</div>
+    <h1>Doramas</h1>
+    <p class="lead">Explora y busca doramas desde el catálogo de SoloLatino, integrado aquí sin sacar la navegación de AniKura.</p>
+    <div class="chips" style="margin-top:14px"><span class="chip score">Buscador del proveedor incluido</span><span class="chip">Reproducción integrada</span></div>
+    <div class="panel" style="margin-top:22px;padding:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:6px 8px 12px">
+        <div><b>Catálogo de Doramas</b><p style="color:var(--mut);font-size:13px">Usa el buscador y los filtros que aparecen dentro del catálogo.</p></div>
+      </div>
+      <div class="doramas-frame-wrap">
+        <iframe class="doramas-frame" src="https://sololatino.net/doramas"
+          title="Catálogo y buscador de doramas de SoloLatino"
+          loading="lazy" referrerpolicy="no-referrer"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+          allow="fullscreen; picture-in-picture"></iframe>
+      </div>
+    </div>
+    <p style="color:var(--mut);font-size:12px;margin-top:12px">La página del proveedor se muestra dentro de este recuadro. Las restricciones del navegador impiden que el contenido incrustado abra ventanas emergentes o inicie descargas desde este marco cuando el navegador las respeta.</p>
+  </div>`);
 }
 
 /* ---------- Películas ---------- */
@@ -1217,7 +1243,7 @@ function tour() {
 let curPath = '/', curRaw = '/', rt = 0, app;
 const readHash = () => (location.hash || '#/').slice(1) || '/';
 const ROUTES = [
-  [/^\/?$/, vHome], [/^\/browse\/?$/, vBrowse], [/^\/latest\/?$/, vLatest], [/^\/genres\/?$/, vGenres], [/^\/schedule\/?$/, vSchedule], [/^\/movies\/?$/, vMovies],
+  [/^\/?$/, vHome], [/^\/browse\/?$/, vBrowse], [/^\/latest\/?$/, vLatest], [/^\/genres\/?$/, vGenres], [/^\/schedule\/?$/, vSchedule], [/^\/movies\/?$/, vMovies], [/^\/doramas\/?$/, vDoramas],
   [/^\/library\/?$/, vLibrary], [/^\/community\/?$/, vCommunity], [/^\/together\/?$/, vTogether], [/^\/login\/?$/, vLogin], [/^\/settings\/?$/, vSettings], [/^\/profile\/?$/, vProfile],
   [/^\/title\/(\d+)\/?$/, vTitle], [/^\/watch\/(\d+)\/(\d+)\/(sub|dub)\/?$/, vWatch], [/^\/(about|help|contact|terms|privacy|dmca)\/?$/, vStatic]
 ];
