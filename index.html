@@ -226,22 +226,21 @@ body.hn .tbanner{padding-top:64px}
 .relrow small{color:var(--mut);display:block}
 
 /* watch */
-.wrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:26px;padding:84px clamp(16px,4vw,48px) 20px;align-items:start}
-body.hn .wrap{padding-top:28px}
-.player{position:relative;aspect-ratio:16/9;background:#000;border-radius:16px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(0,0,0,.8)}
+.wrap{--pad:84px;--top:84px;--side:clamp(340px,24vw,460px);--below:190px;display:grid;grid-template-columns:minmax(0,1fr) var(--side);gap:26px;padding:var(--pad) clamp(16px,4vw,48px) 20px;align-items:start;max-width:2200px;margin:0 auto}
+body.hn .wrap{--pad:28px;--top:150px}
+.player{position:relative;aspect-ratio:16/9;width:100%;max-height:max(280px,calc(100vh - var(--top) - var(--below)));max-height:max(280px,calc(100dvh - var(--top) - var(--below)));background:#000;border-radius:16px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(0,0,0,.8)}
 .player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .pnote{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:24px;gap:10px}
 .pnote h3{font-family:var(--f-d);font-size:clamp(15px,2vw,20px);letter-spacing:-.02em}
 .pnote p{color:#d9cdf5;max-width:52ch;font-size:14px}
 .pnote code{background:rgba(255,255,255,.12);padding:2px 7px;border-radius:6px;font-size:13px}
-.phelp{color:var(--mut);font-size:13px;margin-top:10px;max-width:80ch}
-.phelp a{color:var(--volt);font-weight:700}
-.wbar{display:flex;gap:10px;margin:14px 0;flex-wrap:wrap}
-.prefs{background:var(--s1);border:1px solid var(--line);border-radius:var(--r-panel);padding:14px 16px;display:grid;gap:12px}
-.prefrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.prefrow>label{color:var(--mut);font-weight:700;font-size:13px;min-width:92px}
+.wbar{display:flex;gap:10px;margin:12px 0;flex-wrap:wrap}
+.prefs{background:var(--s1);border:1px solid var(--line);border-radius:var(--r-panel);padding:8px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px}
+.prefrow{display:flex;gap:8px 16px;align-items:center;flex-wrap:wrap}
+.prefrow>label{color:var(--mut);font-weight:700;font-size:13px}
+.prefs select{height:38px;min-width:0;padding:0 10px}
 .seg{display:inline-flex;background:var(--s2);border-radius:999px;padding:3px}
-.seg button{border:0;background:none;color:var(--mut);height:34px;padding:0 16px;border-radius:999px;font:700 13.5px var(--f-b);cursor:pointer}
+.seg button{border:0;background:none;color:var(--mut);height:34px;padding:0 14px;border-radius:999px;font:700 13.5px var(--f-b);cursor:pointer}
 .seg button.on{background:var(--tx);color:var(--bg)}
 .switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;font-size:14px}
 .switch input{position:absolute;opacity:0;pointer-events:none}
@@ -374,6 +373,7 @@ footer li a:hover{color:var(--volt)}
 @media(max-width:900px){.hero-art{display:none}.nav{display:none}#tabbar{display:flex}.tb-in{grid-template-columns:1fr}.tposter{width:150px}.hero-dots{display:none}.hero{min-height:74vh;padding-bottom:50px}#top{gap:12px}}
 @media(max-width:560px){.cont{flex-direction:column;align-items:flex-start}.cont .thumb{width:100%}.eprow{grid-template-columns:112px 1fr}.eprow .go{display:none}.fgrid{grid-template-columns:1fr}}
 .reduce *,.reduce *::before,.reduce *::after{animation:none!important;transition:none!important}
+@media(max-height:560px){.wrap{--below:70px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
@@ -1058,7 +1058,6 @@ const playerUrl = (id, ep, lang) => (CFG.PLAYER_KEY ? CFG.PLAYER_URL_KEY : CFG.P
 function playerH(m, ep, lang) {
   return `<div class="art" style="${artStyle(m)}"></div><iframe id="pf" src="${esc(playerUrl(m.id, ep, lang))}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; screen-wake-lock" allowfullscreen referrerpolicy="origin" title="Reproductor de ${esc(m.title)}"></iframe>`;
 }
-const playerHelp = (id, ep, lang) => `<p class="phelp">¿El vídeo no carga? <a href="https://ani.pm/embed/ani/${id}/${ep}/${lang}" target="_blank" rel="noopener">Ábrelo en ani.pm</a>. El reproductor puede abrir un anuncio en otra pestaña al pulsar play, como máximo una vez cada 5 minutos.</p>`;
 async function vWatch(c) {
   const id = +c.m[1], ep = Math.max(1, +c.m[2]), lang = c.m[3];
   c.set(`<div class="wrap"><div><div class="player sk"></div></div><aside class="wside"><div class="sk" style="height:300px"></div></aside></div>`);
@@ -1069,7 +1068,7 @@ async function vWatch(c) {
   HIST = HIST.filter(h => !(h.id === id && h.ep === ep)); HIST.unshift({ id, ep, at: Date.now() }); HIST = HIST.slice(0, 200); store.set('hist', HIST); markWatched(id, ep);
   const n = epCount(m), opt = (v, t, cur) => `<option value="${v}"${v === cur ? ' selected' : ''}>${t}</option>`;
   const info = (m.se || []).map(s => { const x = /Episode\s+(\d+)\s*[-:–]\s*(.*)/i.exec(s.title || ''); return x && +x[1] === ep ? x[2] : ''; }).find(Boolean);
-  c.set(`<div class="wrap"><div class="wmain"><div class="player">${playerH(m, ep, lang)}</div>${playerHelp(id, ep, lang)}
+  c.set(`<div class="wrap"><div class="wmain"><div class="player">${playerH(m, ep, lang)}</div>
     <div class="wbar"><a class="btn sm" href="#/title/${id}">${ic('left')}${esc(m.title)}</a>${ep > 1 ? `<a class="btn sm" href="${watchHref(id, ep - 1, lang)}">Anterior</a>` : ''}${!n || ep < n ? `<a class="btn sm volt" href="${watchHref(id, ep + 1, lang)}">Siguiente episodio${ic('right')}</a>` : ''}</div>
     <div class="prefs"><div class="prefrow"><label>Audio</label><div class="seg" role="group" aria-label="Audio"><button data-lang="sub" class="${lang === 'sub' ? 'on' : ''}">Japonés</button><button data-lang="dub" class="${lang === 'dub' ? 'on' : ''}">Doblaje</button></div></div>
     <div class="prefrow"><label for="subs">Subtítulos</label><select id="subs">${opt('es', 'Español', SET.subs)}${opt('en', 'Inglés', SET.subs)}${opt('pt', 'Portugués', SET.subs)}${opt('fr', 'Francés', SET.subs)}${opt('de', 'Alemán', SET.subs)}${opt('it', 'Italiano', SET.subs)}</select></div>
@@ -1140,7 +1139,7 @@ async function vTogether(c) {
     const r = rooms[code];
     if (!r) { c.set(`<div class="page">${emptyH('No encontramos esa sala', 'Las salas se guardan en el navegador donde se crearon. Crea una nueva o revisa el código.', '<a class="btn volt" href="#/together">Volver a Ver en grupo</a>')}</div>`); return; }
     const m = await media(r.id); if (!c.alive() || !m) return;
-    c.set(`<div class="wrap"><div class="wmain"><div class="player">${playerH(m, r.ep, SET.lang)}</div>${playerHelp(m.id, r.ep, SET.lang)}<div class="winfo"><div class="chips">${chip('Sala ' + code, 'score')}${chip('Episodio ' + r.ep)}</div><h1 style="margin-top:10px">${esc(m.title)}</h1><p>La reproducción no se sincroniza entre dispositivos en esta versión. Para ver en sincronía hace falta conectar un servidor de salas.</p></div><div class="wbar"><button class="btn sm" id="cpl">Copiar enlace de la sala</button><a class="btn sm" href="#/together">Salir de la sala</a></div></div>
+    c.set(`<div class="wrap"><div class="wmain"><div class="player">${playerH(m, r.ep, SET.lang)}</div><div class="winfo"><div class="chips">${chip('Sala ' + code, 'score')}${chip('Episodio ' + r.ep)}</div><h1 style="margin-top:10px">${esc(m.title)}</h1><p>La reproducción no se sincroniza entre dispositivos en esta versión. Para ver en sincronía hace falta conectar un servidor de salas.</p></div><div class="wbar"><button class="btn sm" id="cpl">Copiar enlace de la sala</button><a class="btn sm" href="#/together">Salir de la sala</a></div></div>
       <aside class="wside"><h2>Chat de la sala</h2><div id="rc"></div><form class="cform" id="rf" style="margin-top:12px"><input class="field" maxlength="300" placeholder="Escribe en la sala" aria-label="Mensaje" required><button class="btn volt">Enviar</button></form></aside></div>`);
     const draw = () => { $('#rc').innerHTML = (r.chat || []).length ? r.chat.map(x => `<div class="cmt"><span class="av" style="background:${esc(x.c)}">${esc(x.n[0].toUpperCase())}</span><div><b>${esc(x.n)}</b><p>${esc(x.t)}</p></div></div>`).join('') : '<p style="color:var(--mut)">Solo tú por ahora.</p>'; };
     draw();
