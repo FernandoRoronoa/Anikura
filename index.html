@@ -6,8 +6,6 @@
 <title>AniKura — anime y estrenos</title>
 <meta name="description" content="Anime en español: catálogo, estrenos de la semana, calendario, biblioteca y comunidad.">
 <meta name="theme-color" content="#0b0516">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https: data:; connect-src https://graphql.anilist.co https://api.tvmaze.com; frame-src https:; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
-<meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Unbounded:wght@500;700;800;900&display=swap" rel="stylesheet">
@@ -264,21 +262,6 @@ body.hn .wrap{--pad:28px;--top:150px}
 .ranges{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0 10px}
 .ranges .pill{height:30px;font-size:12.5px;padding:0 12px}
 
-/* doramas */
-.dsearch{display:flex;gap:10px;margin:22px 0 14px;max-width:720px}
-.dsearch .field{flex:1;min-width:0}
-.dnote{color:var(--mut);font-size:13.5px;margin-top:12px;max-width:80ch}
-.attr{color:var(--mut);font-size:13px;padding:22px clamp(16px,4vw,48px) 4px;max-width:96ch}
-.attr a,.dnote a{color:var(--volt);font-weight:700}
-.eprow.static:hover{background:none}
-.where{display:flex;flex-wrap:wrap;gap:10px}
-.cast{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-.crow{display:flex;gap:12px;align-items:center;padding:8px 10px;border-radius:14px;background:var(--s1);border:1px solid var(--line)}
-.crow .pic{width:48px;height:48px;border-radius:50%;overflow:hidden;position:relative;background:var(--s3);flex:none;display:grid;place-items:center;font-weight:800;font-size:13px;color:var(--mut)}
-.crow .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.crow b{font-size:14px}
-.crow small{display:block;color:var(--mut);font-size:12.5px}
-
 /* comments / chat */
 .comments{margin-top:26px}
 .comments h2,.panel h2{font-family:var(--f-d);font-size:17px;letter-spacing:-.025em;margin-bottom:12px}
@@ -412,9 +395,6 @@ const CFG = {
   // {id} = id de AniList, {ep} = episodio, {lang} = sub | dub
   PLAYER_URL: 'https://ani.pm/embed/ani/{id}/{ep}/{lang}?autoplay=1&autonext={autonext}&autoskip={autoskip}&episodes=1&color=37ff8b&subtitles={subs}',
   PLAYER_URL_KEY: 'https://ani.pm/embed/v1/{id}/{ep}?key={key}&lang={lang}&autoplay=1&autonext={autonext}&autoskip={autoskip}&episodes=1&color=37ff8b&subtitles={subs}',
-  // Restricciones del iframe del reproductor: sin descargas, sin redirigir esta página, sin diálogos ni formularios.
-  // Se permiten ventanas emergentes porque el reproductor de ani.pm las necesita para funcionar. Déjalo vacío para quitar el sandbox.
-  SANDBOX: 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-presentation allow-orientation-lock',
   API: 'https://graphql.anilist.co'
 };
 
@@ -779,7 +759,7 @@ function bindRows(root) {
 }
 
 /* ============ Cabecera, menú, buscador y avisos ============ */
-const NAV = [['/', 'Inicio', 'home'], ['/browse', 'Explorar', 'compass'], ['/latest', 'Novedades', 'bolt'], ['/schedule', 'Calendario', 'cal'], ['/movies', 'Películas', 'film'], ['/doramas', 'Doramas', 'heart'], ['/genres', 'Géneros', 'tag']];
+const NAV = [['/', 'Inicio', 'home'], ['/browse', 'Explorar', 'compass'], ['/latest', 'Novedades', 'bolt'], ['/schedule', 'Calendario', 'cal'], ['/movies', 'Películas', 'film'], ['/genres', 'Géneros', 'tag']];
 const LOGO = `<svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c4dff"/><stop offset="1" stop-color="#37ff8b"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg)"/><path d="M12.500 9.500v13l10.500-6.500Z" fill="#0b0516"/></svg>`;
 function drawHeader() {
   const p = me();
@@ -794,20 +774,20 @@ function drawTabbar() {
   $('#tabbar').innerHTML = [['/', 'Inicio', 'home'], ['/browse', 'Explorar', 'compass'], ['/latest', 'Novedades', 'bolt'], ['/library', 'Biblioteca', 'books'], ['/profile', 'Perfil', 'user']].map(n => `<a href="#${n[0]}" data-nav="${n[0]}">${ic(n[2])}<span>${n[1]}</span></a>`).join('');
 }
 function setActive(path) {
-  let base = '/' + (path.split('/')[1] || ''); if (base === '/dorama') base = '/doramas';
+  const base = '/' + (path.split('/')[1] || '');
   $$('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === base || (a.dataset.nav === '/' && path === '/')));
   $('#top').classList.toggle('solid', scrollY > 10);
 }
 function drawFooter() {
   const col = (h, l) => `<div><h4>${h}</h4><ul>${l.map(x => `<li><a href="#${x[0]}">${x[1]}</a></li>`).join('')}</ul></div>`;
-  $('#foot').innerHTML = `<div class="fgrid"><div><a class="logo" href="#/">${LOGO}<span>ANI<b>KURA</b></span></a><p class="blurb">Anime y estrenos en español. Catálogo y carátulas de AniList; datos de doramas de TVmaze. AniKura no aloja vídeos.</p></div>${col('Descubrir', [['/', 'Inicio'], ['/browse', 'Explorar'], ['/latest', 'Últimos episodios'], ['/schedule', 'Calendario'], ['/genres', 'Géneros'], ['/movies', 'Películas'], ['/doramas', 'Doramas']])}${col('Tu espacio', [['/library', 'Biblioteca'], ['/profile', 'Perfil'], ['/settings', 'Ajustes']])}${col('Social', [['/community', 'Comunidad'], ['/together', 'Ver en grupo'], ['/community?c=voz', 'Salas de voz']])}${col('AniKura', [['/about', 'Acerca de'], ['/help', 'Ayuda'], ['/contact', 'Contacto'], ['/terms', 'Condiciones'], ['/privacy', 'Privacidad'], ['/dmca', 'DMCA']])}</div><div class="fbot"><span>© ${new Date().getFullYear()} AniKura</span><span>Pulsa / para buscar</span></div>`;
+  $('#foot').innerHTML = `<div class="fgrid"><div><a class="logo" href="#/">${LOGO}<span>ANI<b>KURA</b></span></a><p class="blurb">Anime y estrenos en español. Catálogo y carátulas de AniList. AniKura no aloja vídeos.</p></div>${col('Descubrir', [['/', 'Inicio'], ['/browse', 'Explorar'], ['/latest', 'Últimos episodios'], ['/schedule', 'Calendario'], ['/genres', 'Géneros'], ['/movies', 'Películas']])}${col('Tu espacio', [['/library', 'Biblioteca'], ['/profile', 'Perfil'], ['/settings', 'Ajustes']])}${col('Social', [['/community', 'Comunidad'], ['/together', 'Ver en grupo'], ['/community?c=voz', 'Salas de voz']])}${col('AniKura', [['/about', 'Acerca de'], ['/help', 'Ayuda'], ['/contact', 'Contacto'], ['/terms', 'Condiciones'], ['/privacy', 'Privacidad'], ['/dmca', 'DMCA']])}</div><div class="fbot"><span>© ${new Date().getFullYear()} AniKura</span><span>Pulsa / para buscar</span></div>`;
 }
 function openMenu() {
   const cur = '/' + (curPath.split('/')[1] || '');
   const grp = (h, l) => `<h3>${h}</h3>${l.map(x => `<a href="#${x[0]}" class="${('/' + x[0].split('/')[1]) === cur ? 'on' : ''}">${ic(x[2])}${x[1]}</a>`).join('')}`;
   const d = document.createElement('div');
   d.className = 'drawer';
-  d.innerHTML = `<div class="scrim"></div><aside role="dialog" aria-label="Menú"><div style="display:flex;justify-content:space-between;align-items:center"><span class="logo">${LOGO}<span>ANI<b>KURA</b></span></span><button class="ibtn" data-x aria-label="Cerrar menú">${ic('close')}</button></div>${grp('Descubrir', [['/', 'Inicio', 'home'], ['/browse', 'Explorar', 'compass'], ['/latest', 'Últimos episodios', 'bolt'], ['/schedule', 'Calendario', 'cal'], ['/movies', 'Películas', 'film'], ['/doramas', 'Doramas', 'heart'], ['/genres', 'Géneros', 'tag']])}${grp('Tu espacio', [['/library', 'Biblioteca', 'books'], ['/profile', 'Perfil', 'user'], ['/settings', 'Ajustes', 'gear']])}${grp('Social', [['/community', 'Comunidad', 'users'], ['/together', 'Ver en grupo', 'play'], ['/community?c=voz', 'Salas de voz', 'mic']])}</aside>`;
+  d.innerHTML = `<div class="scrim"></div><aside role="dialog" aria-label="Menú"><div style="display:flex;justify-content:space-between;align-items:center"><span class="logo">${LOGO}<span>ANI<b>KURA</b></span></span><button class="ibtn" data-x aria-label="Cerrar menú">${ic('close')}</button></div>${grp('Descubrir', [['/', 'Inicio', 'home'], ['/browse', 'Explorar', 'compass'], ['/latest', 'Últimos episodios', 'bolt'], ['/schedule', 'Calendario', 'cal'], ['/movies', 'Películas', 'film'], ['/genres', 'Géneros', 'tag']])}${grp('Tu espacio', [['/library', 'Biblioteca', 'books'], ['/profile', 'Perfil', 'user'], ['/settings', 'Ajustes', 'gear']])}${grp('Social', [['/community', 'Comunidad', 'users'], ['/together', 'Ver en grupo', 'play'], ['/community?c=voz', 'Salas de voz', 'mic']])}</aside>`;
   const close = () => { d.remove(); document.removeEventListener('keydown', kd); };
   const kd = e => { if (e.key === 'Escape') close(); };
   d.addEventListener('click', e => { if (e.target.closest('.scrim,[data-x],a')) close(); });
@@ -1076,7 +1056,7 @@ async function vTitle(c) {
 /* ---------- Reproductor ---------- */
 const playerUrl = (id, ep, lang) => (CFG.PLAYER_KEY ? CFG.PLAYER_URL_KEY : CFG.PLAYER_URL).replace('{id}', id).replace('{ep}', ep).replace('{key}', encodeURIComponent(CFG.PLAYER_KEY)).replace('{lang}', lang).replace('{autonext}', SET.autonext ? 1 : 0).replace('{autoskip}', SET.autoskip ? 1 : 0).replace('{subs}', SET.subs);
 function playerH(m, ep, lang) {
-  return `<div class="art" style="${artStyle(m)}"></div><iframe id="pf" src="${esc(playerUrl(m.id, ep, lang))}"${CFG.SANDBOX ? ` sandbox="${esc(CFG.SANDBOX)}"` : ''} allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; screen-wake-lock" allowfullscreen referrerpolicy="origin" title="Reproductor de ${esc(m.title)}"></iframe>`;
+  return `<div class="art" style="${artStyle(m)}"></div><iframe id="pf" src="${esc(playerUrl(m.id, ep, lang))}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; screen-wake-lock" allowfullscreen referrerpolicy="origin" title="Reproductor de ${esc(m.title)}"></iframe>`;
 }
 async function vWatch(c) {
   const id = +c.m[1], ep = Math.max(1, +c.m[2]), lang = c.m[3];
@@ -1233,213 +1213,11 @@ function tour() {
   const draw = () => { const s = steps[i]; $('#tb', d).innerHTML = `<p style="color:var(--volt);font-weight:700;margin:0">${s[0]}</p><h2>${s[1]}</h2><p>${s[2]}</p><div class="dots">${steps.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div><div class="modal-actions" style="margin-top:6px"><button class="btn" data-x>Saltar</button><button class="btn volt" data-n>${i === steps.length - 1 ? 'Empezar' : 'Siguiente'}</button></div>`; $('[data-x]', d).onclick = d.close; $('[data-n]', d).onclick = () => { if (i === steps.length - 1) d.close(); else { i++; draw(); } }; $('[data-n]', d).focus(); };
   draw(); store.set('tour', 1);
 }
-/* ============ Doramas: catálogo de TVmaze (solo datos) y enlaces a dónde verlos ============ */
-const TVM = 'https://api.tvmaze.com';
-const D_LANG = { Korean: 'KR', Japanese: 'JP', Chinese: 'CN', Mandarin: 'CN', Cantonese: 'HK', Taiwanese: 'TW', Thai: 'TH' };
-const D_PAIS = { KR: 'Corea del Sur', JP: 'Japón', CN: 'China', HK: 'Hong Kong', TW: 'Taiwán', TH: 'Tailandia' };
-const D_CORTO = { KR: 'Corea', JP: 'Japón', CN: 'China', HK: 'China', TW: 'Taiwán', TH: 'Tailandia' };
-const D_TIPOS = [['', 'Todos'], ['KR', 'Coreanos'], ['JP', 'Japoneses'], ['CN', 'Chinos'], ['TW', 'Taiwaneses'], ['TH', 'Tailandeses']];
-const D_GEN = { Drama: 'Drama', Romance: 'Romance', Comedy: 'Comedia', Thriller: 'Suspenso', Fantasy: 'Fantasía', Action: 'Acción', Crime: 'Crimen', Mystery: 'Misterio', Medical: 'Médico', Family: 'Familia', Adventure: 'Aventura', Horror: 'Terror', History: 'Historia', 'Science-Fiction': 'Ciencia ficción', Music: 'Música', War: 'Guerra', Legal: 'Legal', Supernatural: 'Sobrenatural', Sports: 'Deportes', Food: 'Gastronomía', Politics: 'Política', Espionage: 'Espionaje' };
-const D_ESTADO = { Running: 'En emisión', Ended: 'Finalizado', 'To Be Determined': 'Por determinar', 'In Development': 'En desarrollo' };
-const D_CLASICOS = ['Crash Landing on You', 'Goblin', 'Descendants of the Sun', 'Reply 1988', 'Hospital Playlist', 'Itaewon Class', 'Business Proposal', 'Extraordinary Attorney Woo', 'Hanzawa Naoki', 'Nodame Cantabile', 'Meteor Garden', 'Nirvana in Fire'];
-
-/* Selección de muestra (sin conexión): sinopsis propias, sin carátulas */
-const D_SAMPLE = [
-  [1, 'Crash Landing on You', 2019, 'KR', 'tvN', ['Romance', 'Comedy', 'Drama'], 'Una empresaria surcoreana cae en Corea del Norte tras un accidente de parapente y un capitán del ejército decide esconderla.'],
-  [2, 'Goblin', 2016, 'KR', 'tvN', ['Fantasy', 'Romance', 'Drama'], 'Un guerrero inmortal necesita a su novia destinada para poner fin a una vida demasiado larga.'],
-  [3, 'Descendants of the Sun', 2016, 'KR', 'KBS2', ['Romance', 'Drama', 'Action'], 'Un capitán de las fuerzas especiales y una cirujana se enamoran mientras trabajan en una zona de crisis.'],
-  [4, 'Reply 1988', 2015, 'KR', 'tvN', ['Comedy', 'Family', 'Drama'], 'Cinco familias vecinas de un barrio de Seúl crecen y se cuidan unas a otras a finales de los años ochenta.'],
-  [5, 'Hospital Playlist', 2020, 'KR', 'tvN', ['Medical', 'Comedy', 'Drama'], 'Cinco amigos desde la facultad de medicina trabajan en el mismo hospital y tocan juntos en una banda.'],
-  [6, 'Itaewon Class', 2020, 'KR', 'JTBC', ['Drama'], 'Un joven con un pasado difícil abre un restaurante en Itaewon con la idea de enfrentarse a una gran empresa.'],
-  [7, 'Business Proposal', 2022, 'KR', 'SBS', ['Romance', 'Comedy'], 'Una empleada acepta ir en lugar de su amiga a una cita a ciegas y descubre que su pareja es su propio jefe.'],
-  [8, 'Extraordinary Attorney Woo', 2022, 'KR', 'ENA', ['Drama', 'Legal'], 'Una abogada brillante con autismo aprende a abrirse camino en un bufete donde todos dudan de ella.'],
-  [9, 'Hanzawa Naoki', 2013, 'JP', 'TBS', ['Drama', 'Crime'], 'Un banquero decidido a devolver cada golpe investiga el fraude que amenaza a su entidad.'],
-  [10, 'Nodame Cantabile', 2006, 'JP', 'Fuji TV', ['Comedy', 'Music', 'Romance'], 'Un joven pianista perfeccionista conoce a una compañera desordenada con un talento fuera de lo común.'],
-  [11, 'Meteor Garden', 2001, 'TW', 'CTS', ['Romance', 'Drama'], 'Una estudiante de origen humilde se enfrenta a los cuatro chicos más influyentes de una escuela de élite.'],
-  [12, 'Nirvana in Fire', 2015, 'CN', 'Hunan TV', ['History', 'Drama'], 'Un estratega regresa a la capital con otra identidad para reparar una injusticia que destruyó a su familia.']
-].map(([n, title, year, code, network, genres, desc]) => ({ id: -n, title, year, code, network, genres, desc, score: 0, cover: '', big: '', status: '', premiered: '', site: '', runtime: 0, sample: true }));
-
-/* ---------- Normalización ---------- */
-const https = u => u ? String(u).replace(/^http:/, 'https:') : '';
-const dText = h => { try { return (new DOMParser().parseFromString(String(h || ''), 'text/html').body.textContent || '').trim(); } catch (e) { return ''; } };
-function dCode(s) {
-  const c = (s.network && s.network.country && s.network.country.code) || (s.webChannel && s.webChannel.country && s.webChannel.country.code);
-  return D_PAIS[c] ? c : (D_LANG[s.language] || '');
-}
-const dIsDrama = s => !!s && s.type === 'Scripted' && !!dCode(s);
-const dChip = code => code === 'HK' ? 'CN' : code;
-const DREG = new Map();
-function dNorm(s) {
-  const n = s.network || s.webChannel || {};
-  const d = {
-    id: s.id, title: s.name, year: s.premiered ? +s.premiered.slice(0, 4) : 0, premiered: s.premiered || '', code: dCode(s), genres: s.genres || [], status: s.status || '',
-    score: (s.rating && s.rating.average) || 0, cover: https(s.image && (s.image.medium || s.image.original)), big: https(s.image && (s.image.original || s.image.medium)),
-    desc: dText(s.summary), network: n.name || '', site: https(s.officialSite || n.officialSite || ''), runtime: s.averageRuntime || s.runtime || 0
-  };
-  DREG.set(d.id, d); return d;
-}
-D_SAMPLE.forEach(d => DREG.set(d.id, d));
-const dGen = g => D_GEN[g] || g;
-
-/* ---------- Red: caché, límite de peticiones (TVmaze permite unas 20 cada 10 s) ---------- */
-const DC = new Map(); let dGate = Promise.resolve(), dDownAt = 0;
-window.addEventListener('online', () => { dDownAt = 0; });
-const dSlow = fn => { const run = dGate.then(fn); dGate = run.then(() => new Promise(r => setTimeout(r, 550)), () => {}); return run; };
-function dget(path, o = {}) {
-  const hit = DC.get(path); if (hit && Date.now() - hit.t < (o.ttl ?? 300000)) return hit.p;
-  const job = async () => {
-    if (Date.now() - dDownAt < 30000) throw new Error('Sin conexión');
-    for (let i = 0; i < 2; i++) {
-      const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 9000);
-      try {
-        const r = await fetch(TVM + path, { signal: ctl.signal }); clearTimeout(t);
-        if (r.status === 429) { await new Promise(x => setTimeout(x, 1600)); continue; }
-        if (r.status === 404) return null;
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return await r.json();
-      } catch (e) { clearTimeout(t); if (e instanceof TypeError || e.name === 'AbortError') { dDownAt = Date.now(); throw e; } if (i) throw e; }
-    }
-    throw new Error('Demasiadas peticiones');
-  };
-  const p = (o.slow ? dSlow(job) : job()).catch(e => { DC.delete(path); throw e; });
-  DC.set(path, { t: Date.now(), p }); return p;
-}
-const dDay = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-const dSaved = () => store.get('dsaved', {});
-const dIsSaved = id => !!dSaved()[id];
-const dSort = (a, b) => (b.score - a.score) || a.title.localeCompare(b.title);
-
-/* ---------- Piezas ---------- */
-const dAddBtn = id => dIsSaved(id) ? `<button class="add on" data-dsave="${id}" aria-label="Quitar de mis guardados">${ic('check')}</button>` : `<button class="add" data-dsave="${id}" aria-label="Guardar dorama">${ic('plus')}</button>`;
-function dcardH(d) {
-  const sub = [d.year || '', d.network].filter(Boolean).join(', ');
-  return `<div class="card"><a class="poster" href="#/dorama/${d.id}" tabindex="-1" aria-hidden="true">${art(d)}${d.code ? `<span class="eps">${esc(D_CORTO[d.code])}</span>` : ''}</a>${dAddBtn(d.id)}<a class="meta" href="#/dorama/${d.id}"><h3>${esc(d.title)}</h3><div class="sub"><span>${esc(sub)}</span>${d.score ? `<span class="star">★ ${d.score.toFixed(1)}</span>` : ''}</div></a></div>`;
-}
-document.addEventListener('click', e => {
-  const b = e.target.closest('[data-dsave]'); if (!b) return;
-  e.preventDefault(); const id = +b.dataset.dsave, all = dSaved(), d = DREG.get(id); if (!d) return;
-  if (all[id]) { delete all[id]; toast('Quitado de tus guardados'); } else { all[id] = { id: d.id, title: d.title, year: d.year, code: d.code, network: d.network, cover: d.cover, score: d.score, genres: d.genres.slice(0, 3), sample: !!d.sample }; DREG.set(d.id, d); toast('Guardado en Doramas'); }
-  store.set('dsaved', all);
-  $$(`[data-dsave="${id}"]`).forEach(x => { const on = !!all[id]; x.classList.toggle('on', on); if (x.classList.contains('add')) { x.innerHTML = ic(on ? 'check' : 'plus'); x.setAttribute('aria-label', on ? 'Quitar de mis guardados' : 'Guardar dorama'); } else x.innerHTML = (on ? ic('check') + 'Guardado' : ic('plus') + 'Guardar'); });
-  const cnt = $('#dsc'); if (cnt) cnt.textContent = 'Guardados (' + Object.keys(all).length + ')';
-});
-const dAttr = () => `<p class="attr">Los datos de los doramas vienen de <a href="https://www.tvmaze.com" target="_blank" rel="noopener noreferrer">TVmaze</a> (licencia CC BY-SA 4.0). AniKura no aloja ni reproduce doramas.</p>`;
-
-/* ---------- Lista de doramas ---------- */
-let dSeq = 0;
-async function vDoramas(c) {
-  const st = { k: c.q.get('k') || '', q: (c.q.get('q') || '').trim(), saved: c.q.get('f') === 'saved' };
-  document.title = 'Doramas — AniKura';
-  const saved0 = Object.keys(dSaved()).length;
-  c.set(`<div class="page"><h1>Doramas</h1><p class="lead">Series de Corea, Japón, China, Taiwán y Tailandia. Busca por título y consulta en qué plataforma oficial verlas.</p>
-    <form class="dsearch" id="dform" role="search"><input class="field" id="dq" type="search" maxlength="80" placeholder="Busca un dorama" aria-label="Buscar doramas" autocomplete="off" value="${esc(st.q)}"><button class="btn volt">Buscar</button></form>
-    <div class="pills" id="dk" role="group" aria-label="Filtrar por país"></div><p class="dnote" id="dnote" hidden></p></div><div id="dres"></div>${dAttr()}`);
-  const res = $('#dres'), note = $('#dnote');
-  const pills = () => { $('#dk').innerHTML = D_TIPOS.map(([k, t]) => `<button class="pill${!st.saved && k === st.k ? ' on' : ''}" data-k="${k}">${t}</button>`).join('') + `<button class="pill${st.saved ? ' on' : ''}" data-saved><span id="dsc">Guardados (${Object.keys(dSaved()).length})</span></button>`; };
-  const sync = () => { const p = new URLSearchParams(); if (st.q) p.set('q', st.q); if (st.k && !st.saved) p.set('k', st.k); if (st.saved) p.set('f', 'saved'); const raw = '/doramas' + (p.toString() ? '?' + p : ''); curRaw = raw; try { history.replaceState(null, '', '#' + raw); } catch (e) { location.hash = '#' + raw; } };
-  const keep = d => !st.k || dChip(d.code) === st.k;
-  const offNote = () => { note.hidden = false; note.innerHTML = 'No pudimos conectar con el catálogo de doramas (TVmaze), así que se muestra una selección de muestra. <button class="btn sm" id="dretry">Reintentar</button>'; $('#dretry').onclick = () => { dDownAt = 0; DC.clear(); store.set('dpop', null); render(true); }; };
-  const grid = (items, title, empty) => items.length ? `<section class="sec"><div class="sec-h"><h2>${esc(title)}</h2></div><div class="grid">${items.map(dcardH).join('')}</div></section>` : `<section class="sec">${empty}</section>`;
-
-  let rowsToday = [], rowsPop = [], loaded = { today: false, pop: false }, okAny = false, paintT = 0, off = false, started = false;
-  const searching = () => st.q.length >= 2;
-  const paintRows = () => {
-    if (!c.alive() || searching() || st.saved) return;
-    const t = rowsToday.filter(keep).sort(dSort), p = rowsPop.filter(keep).sort(dSort);
-    const row = (id, title, items, done, emptyMsg) => items.length ? rowH(id, title, items.map(dcardH).join('')) : (done ? `<section class="sec"><div class="sec-h"><h2>${esc(title)}</h2></div><p class="dnote">${emptyMsg}</p></section>` : skSec(id, title));
-    const sl = {}; $$('.scroller', res).forEach(x => { const id = x.closest('.sec') && x.closest('.sec').id; if (id) sl[id] = x.scrollLeft; });
-    res.innerHTML = (off ? '' : row('d-today', 'Se emiten hoy', t, loaded.today, 'Hoy no hay estrenos de este tipo en el calendario.')) + row('d-pop', 'Para maratonear', p, loaded.pop, 'No encontramos títulos de este tipo en la selección.');
-    bindRows(res); $$('.scroller', res).forEach(x => { const id = x.closest('.sec') && x.closest('.sec').id; if (id && sl[id]) x.scrollLeft = sl[id]; });
-  };
-  const paintSoon = () => { clearTimeout(paintT); paintT = setTimeout(paintRows, 350); };
-
-  const draw = async () => {
-    const my = ++dSeq; pills(); note.hidden = true;
-    if (st.saved) {
-      const items = Object.values(dSaved()).filter(keep);
-      res.innerHTML = grid(items, 'Tus doramas guardados', emptyH('Aún no guardaste doramas', 'Toca el botón + en cualquier póster para guardarlo aquí.', '<button class="btn volt" data-k="">Explorar doramas</button>')); return;
-    }
-    if (searching()) {
-      res.innerHTML = `<section class="sec"><div class="sec-h"><h2>Resultados para «${esc(st.q)}»</h2></div><div class="grid">${'<div class="sk" style="aspect-ratio:2/3"></div>'.repeat(6)}</div></section>`;
-      let items, off = false;
-      try { const r = await dget('/search/shows?q=' + encodeURIComponent(st.q), { ttl: 600000 }); items = (r || []).map(x => x.show).filter(dIsDrama).map(dNorm); }
-      catch (e) { off = true; const q = st.q.toLowerCase(); items = D_SAMPLE.filter(d => d.title.toLowerCase().includes(q)); }
-      if (my !== dSeq || !c.alive()) return;
-      if (off) offNote();
-      res.innerHTML = grid(uniq(items, d => d.id).filter(keep), `Resultados para «${st.q}»`, emptyH('No encontramos ese dorama', 'Prueba con el título en inglés o en romanización, y revisa el filtro de país.', '<button class="btn volt" data-k="">Ver todos los países</button>'));
-      return;
-    }
-    startRows(); paintRows();
-  };
-
-  /* Carga de las filas de inicio (solo cuando hacen falta): hoy y selección */
-  function startRows() {
-    if (started) return; started = true;
-    const day = dDay(), reqs = ['/schedule?country=KR&date=' + day, '/schedule?country=JP&date=' + day, '/schedule?country=CN&date=' + day, '/schedule?country=TW&date=' + day, '/schedule?country=TH&date=' + day, '/schedule/web?country=KR&date=' + day, '/schedule/web?country=JP&date=' + day];
-    Promise.all(reqs.map(p => dget(p, { slow: true }).then(r => { okAny = true; (r || []).forEach(e => { const s = e.show || (e._embedded && e._embedded.show); if (dIsDrama(s) && !rowsToday.some(x => x.id === s.id)) rowsToday.push(dNorm(s)); }); paintSoon(); }).catch(() => {}))).then(() => { loaded.today = true; paintRows(); });
-    const cache = store.get('dpop', null);
-    if (cache && Date.now() - cache.t < 6048e5 && cache.items && cache.items.length) {
-      rowsPop = cache.items.map(x => { const d = { ...x, genres: x.genres || [], desc: '', big: x.cover || '', status: '', premiered: '', site: '', runtime: 0 }; DREG.set(d.id, d); return d; }); loaded.pop = true; paintRows();
-    } else Promise.all(D_CLASICOS.map(n => dget('/singlesearch/shows?q=' + encodeURIComponent(n), { slow: true, ttl: 864e5 }).then(s => { okAny = true; if (dIsDrama(s) && !rowsPop.some(x => x.id === s.id)) rowsPop.push(dNorm(s)); paintSoon(); }).catch(() => {}))).then(() => {
-      loaded.pop = true;
-      if (!okAny && !rowsPop.length) { rowsPop = D_SAMPLE.slice(); off = true; if (c.alive()) offNote(); }
-      else if (rowsPop.length) store.set('dpop', { t: Date.now(), items: rowsPop.map(d => ({ id: d.id, title: d.title, year: d.year, code: d.code, network: d.network, cover: d.cover, score: d.score, genres: d.genres.slice(0, 3) })) });
-      paintRows();
-    });
-  }
-
-  /* Interacción */
-  $('#dform').onsubmit = e => { e.preventDefault(); st.q = $('#dq').value.trim(); st.saved = false; sync(); draw(); };
-  let t; $('#dq').addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { const v = $('#dq').value.trim(); if (v === st.q) return; st.q = v; st.saved = false; sync(); draw(); }, 450); });
-  const pick = e => {
-    const b = e.target.closest('[data-k],[data-saved]'); if (!b || !c.alive()) return;
-    if (b.hasAttribute('data-saved')) { st.saved = !st.saved; } else { st.k = b.dataset.k; st.saved = false; }
-    sync(); draw();
-  };
-  $('#dk').addEventListener('click', pick); res.addEventListener('click', pick);
-  draw();
-}
-
-/* ---------- Ficha de un dorama ---------- */
-const dWhere = d => {
-  const t = encodeURIComponent(d.title), a = (href, label, cls) => `<a class="btn${cls ? ' ' + cls : ''}" href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`;
-  return [d.site && /^https:\/\//.test(d.site) ? a(esc(d.site), 'Sitio oficial' + (d.network ? ' de ' + esc(d.network) : ''), 'volt') : '', a(`https://www.justwatch.com/mx/buscar?q=${t}`, 'Ver disponibilidad (JustWatch)', d.site ? '' : 'volt'), a(`https://www.netflix.com/search?q=${t}`, 'Buscar en Netflix'), a(`https://www.viki.com/search?q=${t}`, 'Buscar en Viki'), a(`https://www.youtube.com/results?search_query=${t}+dorama+tr%C3%A1iler`, 'Tráiler en YouTube')].join('');
-};
-async function vDorama(c) {
-  const id = +c.m[1];
-  c.set(skTitle);
-  let d = null, eps = [], cast = [];
-  if (id < 0) d = DREG.get(id);
-  else {
-    try {
-      const s = await dget(`/shows/${id}?embed[]=episodes&embed[]=cast`, { ttl: 600000 }); if (!c.alive()) return;
-      if (s && dIsDrama(s)) { d = dNorm(s); const em = s._embedded || {}; eps = (em.episodes || []).filter(e => e.number != null); cast = (em.cast || []).slice(0, 12); }
-    } catch (e) { if (!c.alive()) return; c.set(`<div class="page">${emptyH('No pudimos cargar este dorama', 'Revisa tu conexión e inténtalo de nuevo.', '<button class="btn volt" id="bRetry">Reintentar</button> <a class="btn" href="#/doramas">Volver a Doramas</a>')}</div>`, () => { $('#bRetry').onclick = () => render(); }); return; }
-  }
-  if (!d) { c.set(`<div class="page">${emptyH('No encontramos este dorama', 'Puede que el enlace sea antiguo.', '<a class="btn volt" href="#/doramas">Volver a Doramas</a>')}</div>`); return; }
-  document.title = `${d.title} — AniKura`;
-  const long = d.desc.length > 280, stat = (k, v) => v ? `<div class="stat"><small>${k}</small><b>${v}</b></div>` : '';
-  const seasons = [...new Set(eps.map(e => e.season))].sort((a, b) => a - b);
-  const fdate = s => { try { return new Date(s + 'T00:00:00').toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { return s; } };
-  const epsH = sn => eps.filter(e => e.season === sn).map(e => `<div class="eprow static"><div class="thumb">${art(d, https(e.image && (e.image.medium || e.image.original)))}<span class="num">Ep. ${e.number}</span></div><div class="info"><h4>${esc(e.name || 'Episodio ' + e.number)}</h4><div><span>${esc([e.airdate ? fdate(e.airdate) : '', e.runtime ? e.runtime + ' min' : ''].filter(Boolean).join(', '))}</span></div></div></div>`).join('');
-  const castH = cast.map(x => { const p = x.person || {}, ch = x.character || {}, im = https(p.image && (p.image.medium || p.image.original)); return `<div class="crow"><span class="pic"><span>${esc(initials(p.name || '?'))}</span>${im ? `<img loading="lazy" alt="" src="${esc(im)}" onerror="this.remove()">` : ''}</span><span><b>${esc(p.name || '')}</b><small>${ch.name ? 'como ' + esc(ch.name) : ''}</small></span></div>`; }).join('');
-  c.set(`<section class="tbanner"><div class="bg" style="${artStyle(d)}"></div><div class="tb-in"><div class="tposter">${art(d, d.big || d.cover)}</div><div class="tinfo">
-    <div class="chips">${d.score ? chip(ic('star') + d.score.toFixed(1), 'score') : ''}${d.year ? chip(d.year) : ''}${d.code ? chip(esc(D_PAIS[d.code])) : ''}</div><h1>${esc(d.title)}</h1>
-    <div class="pills" style="margin-bottom:14px">${d.genres.map(g => `<span class="pill">${esc(dGen(g))}</span>`).join('')}</div>
-    <p class="syn${long ? ' clamp' : ''}" id="syn">${esc(d.desc || 'Sin sinopsis disponible.')}</p>${long ? '<button class="linkbtn" id="more">Ver más</button>' : ''}
-    <div class="tact"><button class="btn${dIsSaved(d.id) ? ' on' : ''}" data-dsave="${d.id}">${dIsSaved(d.id) ? ic('check') + 'Guardado' : ic('plus') + 'Guardar'}</button><a class="btn" href="#/doramas">${ic('left')}Doramas</a></div>
-    <div class="stats">${stat('País', d.code ? esc(D_PAIS[d.code]) : '')}${stat('Estreno', d.premiered ? fdate(d.premiered) : (d.year || ''))}${stat('Estado', esc(D_ESTADO[d.status] || d.status))}${stat(/Netflix|Viki|Prime|Disney|Apple|Hulu|HBO|iQIYI|WeTV|Wavve|TVING|Coupang|Kocowa/i.test(d.network) ? 'Plataforma' : 'Cadena', esc(d.network))}${stat('Episodios', eps.length || '')}${stat('Duración', d.runtime ? d.runtime + ' min' : '')}</div></div></div></section>
-    <div style="padding-top:26px"><section class="sec" style="margin-top:0"><div class="sec-h"><h2>Dónde verlo</h2></div><p class="dnote" style="margin:0 0 12px">AniKura no reproduce doramas. Estos botones abren el sitio de la plataforma en otra pestaña solo si los pulsas; revisa allí si está disponible en tu país.</p><div class="where">${dWhere(d)}</div></section>
-    ${eps.length ? `<section class="sec"><div class="sec-h"><h2>Episodios</h2></div>${seasons.length > 1 ? `<div class="pills" id="dss" style="margin-bottom:14px">${seasons.map((s, i) => `<button class="pill${i ? '' : ' on'}" data-s="${s}">Temporada ${s}</button>`).join('')}</div>` : ''}<div class="eplist" id="dep" style="max-width:820px">${epsH(seasons[0])}</div></section>` : (d.sample ? '<section class="sec"><p class="dnote">Estás viendo una ficha de muestra, sin episodios ni reparto. Con conexión al catálogo aparecen completos.</p></section>' : '')}
-    ${castH ? `<section class="sec"><div class="sec-h"><h2>Reparto</h2></div><div class="cast">${castH}</div></section>` : ''}${dAttr()}</div>`);
-  if (long) $('#more').onclick = e => { const s = $('#syn'); s.classList.toggle('clamp'); e.target.textContent = s.classList.contains('clamp') ? 'Ver más' : 'Ver menos'; };
-  const ss = $('#dss'); if (ss) ss.onclick = e => { const b = e.target.closest('[data-s]'); if (!b) return; $$('#dss .pill').forEach(x => x.classList.toggle('on', x === b)); $('#dep').innerHTML = epsH(+b.dataset.s); };
-}
 /* ============ Enrutador y arranque ============ */
 let curPath = '/', curRaw = '/', rt = 0, app;
 const readHash = () => (location.hash || '#/').slice(1) || '/';
 const ROUTES = [
-  [/^\/?$/, vHome], [/^\/browse\/?$/, vBrowse], [/^\/latest\/?$/, vLatest], [/^\/genres\/?$/, vGenres], [/^\/schedule\/?$/, vSchedule], [/^\/movies\/?$/, vMovies], [/^\/doramas\/?$/, vDoramas], [/^\/dorama\/(-?\d+)\/?$/, vDorama],
+  [/^\/?$/, vHome], [/^\/browse\/?$/, vBrowse], [/^\/latest\/?$/, vLatest], [/^\/genres\/?$/, vGenres], [/^\/schedule\/?$/, vSchedule], [/^\/movies\/?$/, vMovies],
   [/^\/library\/?$/, vLibrary], [/^\/community\/?$/, vCommunity], [/^\/together\/?$/, vTogether], [/^\/login\/?$/, vLogin], [/^\/settings\/?$/, vSettings], [/^\/profile\/?$/, vProfile],
   [/^\/title\/(\d+)\/?$/, vTitle], [/^\/watch\/(\d+)\/(\d+)\/(sub|dub)\/?$/, vWatch], [/^\/(about|help|contact|terms|privacy|dmca)\/?$/, vStatic]
 ];
